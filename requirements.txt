@@ -1,10 +1,10 @@
 asgiref
 certifi
 crispy-bootstrap5
-corsheaders
 distlib
 dj-database-url
 Django
+django-cors-headers
 django-crispy-forms
 django-environ
 django-filter
