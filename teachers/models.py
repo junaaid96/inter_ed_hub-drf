@@ -10,6 +10,7 @@ class Teacher(models.Model):
         upload_to='teachers/images/', default='teachers/images/default.jpg', blank=True, null=True)
     bio = models.TextField()
     designation = models.CharField(max_length=100)
+    department = models.CharField(max_length=100, null=True)
     phone = models.CharField(max_length=15)
 
     def __str__(self):

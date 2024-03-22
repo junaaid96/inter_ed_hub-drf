@@ -5,10 +5,10 @@ from .models import Teacher
 
 
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ('id', 'full_name', 'designation', 'phone')
-    list_filter = ('designation',)
+    list_display = ('id', 'full_name', 'designation', 'department', 'phone')
+    list_filter = ('designation', 'department')
     search_fields = ('user__first_name', 'user__last_name',
-                     'designation', 'phone')
+                     'designation', 'department', 'phone')
 
     def full_name(self, obj):
         return f'{obj.user.first_name} {obj.user.last_name}'
