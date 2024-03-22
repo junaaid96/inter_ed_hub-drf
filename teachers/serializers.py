@@ -20,12 +20,13 @@ class RegistrationSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
     designation = serializers.CharField()
+    department = serializers.CharField()
     phone = serializers.CharField()
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email', 'password',
-                  'confirm_password', 'profile_pic', 'bio', 'designation', 'phone')
+                  'confirm_password', 'profile_pic', 'bio', 'designation', 'department', 'phone')
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -48,6 +49,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         profile_pic = validated_data.pop('profile_pic', None)
         bio = validated_data.pop('bio')
         designation = validated_data.pop('designation')
+        department = validated_data.pop('department')
         phone = validated_data.pop('phone')
 
         user = User.objects.create_user(
@@ -57,7 +59,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password']
         )
-        
+
         user.is_active = False
         user.save()
 
@@ -66,6 +68,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             profile_pic=profile_pic,
             bio=bio,
             designation=designation,
+            department=department,
             phone=phone
         )
 
@@ -85,12 +88,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
     designation = serializers.CharField()
+    department = serializers.CharField()
     phone = serializers.CharField()
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email',
-                  'profile_pic', 'bio', 'designation', 'phone')
+                  'profile_pic', 'bio', 'designation', 'department', 'phone')
         extra_kwargs = {
             'username': {'read_only': True},
             'email': {'read_only': True}
@@ -109,6 +113,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         teacher.bio = validated_data.get('bio', teacher.bio)
         teacher.designation = validated_data.get(
             'designation', teacher.designation)
+        teacher.department = validated_data.get(
+            'department', teacher.department)
         teacher.phone = validated_data.get('phone', teacher.phone)
         teacher.save()
 

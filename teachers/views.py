@@ -88,6 +88,7 @@ class UserUpdateView(APIView):
             'profile_pic': teacher.profile_pic,
             'bio': teacher.bio,
             'designation': teacher.designation,
+            'department': teacher.department,
             'phone': teacher.phone
         }
 
