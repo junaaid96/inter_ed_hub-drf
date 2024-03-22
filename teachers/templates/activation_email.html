@@ -1,0 +1,12 @@
+<div>
+    <p>Hello <strong>{{ user.first_name }} {{ user.last_name }}</strong>,</p>
+    <p>
+        Welcome to our Online School! To activate your account, please click the
+        following link:
+    </p>
+    <p>
+        <a href="{{ confirmation_url }}" target="_blank">{{ confirmation_url }}</a>
+    </p>
+    <p>If you did not request this activation, please ignore this email.</p>
+    <p>Thank you! <br /><strong>InterEd Hub</strong></p>
+</div>
