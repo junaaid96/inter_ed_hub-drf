@@ -111,18 +111,27 @@ class UserLoginView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
+            username = serializer.validated_data.get('username')
+            password = serializer.validated_data.get('password')
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({'message': 'User not found!'}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = User.objects.get(username=username)
-            if user.is_active:
-                user = authenticate(username=username, password=password)
-                if user:
-                    login(request, user)
-                    return Response({'message': 'User logged in successfully!'}, status=200)
-                return Response({'message': 'Invalid credentials!'}, status=400)
-            return Response({'message': 'Please activate your account before login!'}, status=400)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if not user.is_active:
+                return Response({'message': 'Please activate your account before login!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            authenticated_user = authenticate(
+                username=username, password=password)
+            if authenticated_user:
+                login(request, authenticated_user)
+                token, created = Token.objects.get_or_create(
+                    user=authenticated_user)
+                return Response({'message': 'User logged in successfully!', 'token': token.key}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'Invalid credentials!'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogoutView(APIView):
