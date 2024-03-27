@@ -14,6 +14,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from rest_framework import status
+from django.core.serializers import serialize
 
 
 class TeacherListView(ListAPIView):
@@ -123,11 +124,16 @@ class UserLoginView(APIView):
 
             authenticated_user = authenticate(
                 username=username, password=password)
+
             if authenticated_user:
                 login(request, authenticated_user)
+
                 token, created = Token.objects.get_or_create(
                     user=authenticated_user)
-                return Response({'message': 'User logged in successfully!', 'token': token.key}, status=status.HTTP_200_OK)
+
+                serialized_token = serialize('json', [token])
+
+                return Response({'message': 'User logged in successfully!', 'token': serialized_token}, status=status.HTTP_200_OK)
             else:
                 return Response({'message': 'Invalid credentials!'}, status=status.HTTP_400_BAD_REQUEST)
         else:
