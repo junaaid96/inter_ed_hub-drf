@@ -131,6 +131,8 @@ class UserLoginView(APIView):
                 token, created = Token.objects.get_or_create(
                     user=authenticated_user)
 
+                profile_pic = str(authenticated_user.teacher.profile_pic)
+
                 custom_token_payload = {
                     'key': token.key,
                     'user_id': authenticated_user.id,
@@ -138,7 +140,7 @@ class UserLoginView(APIView):
                     'email': authenticated_user.email,
                     'first_name': authenticated_user.first_name,
                     'last_name': authenticated_user.last_name,
-                    'profile_pic': authenticated_user.teacher.profile_pic.url,
+                    'profile_pic': profile_pic,
                     'bio': authenticated_user.teacher.bio,
                     'designation': authenticated_user.teacher.designation,
                     'department': authenticated_user.teacher.department,
