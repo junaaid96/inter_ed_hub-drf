@@ -131,9 +131,21 @@ class UserLoginView(APIView):
                 token, created = Token.objects.get_or_create(
                     user=authenticated_user)
 
-                serialized_token = serialize('json', [token])
+                custom_token_payload = {
+                    'key': token.key,
+                    'user_id': authenticated_user.id,
+                    'username': authenticated_user.username,
+                    'email': authenticated_user.email,
+                    'first_name': authenticated_user.first_name,
+                    'last_name': authenticated_user.last_name,
+                    'profile_pic': authenticated_user.teacher.profile_pic.url,
+                    'bio': authenticated_user.teacher.bio,
+                    'designation': authenticated_user.teacher.designation,
+                    'department': authenticated_user.teacher.department,
+                    'phone': authenticated_user.teacher.phone
+                }
 
-                return Response({'message': 'User logged in successfully!', 'token': serialized_token}, status=status.HTTP_200_OK)
+                return Response({'message': 'User logged in successfully!', 'token': custom_token_payload}, status=status.HTTP_200_OK)
             else:
                 return Response({'message': 'Invalid credentials!'}, status=status.HTTP_400_BAD_REQUEST)
         else:
