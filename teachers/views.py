@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from rest_framework import status
 from django.core.serializers import serialize
+from urllib.parse import urljoin
 
 
 class TeacherListView(ListAPIView):
@@ -131,7 +132,9 @@ class UserLoginView(APIView):
                 token, created = Token.objects.get_or_create(
                     user=authenticated_user)
 
-                profile_pic = str(authenticated_user.teacher.profile_pic)
+                base_url = "https://inter-ed-hub-drf.onrender.com/media/"
+                profile_pic_url = urljoin(base_url, str(
+                    authenticated_user.teacher.profile_pic))
 
                 custom_token_payload = {
                     'key': token.key,
@@ -140,7 +143,7 @@ class UserLoginView(APIView):
                     'email': authenticated_user.email,
                     'first_name': authenticated_user.first_name,
                     'last_name': authenticated_user.last_name,
-                    'profile_pic': profile_pic,
+                    'profile_pic': profile_pic_url,
                     'bio': authenticated_user.teacher.bio,
                     'designation': authenticated_user.teacher.designation,
                     'department': authenticated_user.teacher.department,
