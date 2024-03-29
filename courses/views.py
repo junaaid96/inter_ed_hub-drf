@@ -10,9 +10,9 @@ from rest_framework import pagination, filters
 
 
 class CoursePagination(pagination.PageNumberPagination):
-    page_size = 5
+    page_size = 6
     page_query_param = 'page_size'
-    max_page_size = 50
+    max_page_size = 60
 
 
 class CourseListView(ListAPIView):
@@ -20,7 +20,7 @@ class CourseListView(ListAPIView):
     serializer_class = CourseSerializer
     pagination_class = CoursePagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'description', 'department',
+    search_fields = ['title', 'department',
                      'teacher__user__first_name', 'teacher__user__last_name']
 
     def get_queryset(self):
