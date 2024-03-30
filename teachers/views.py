@@ -44,8 +44,7 @@ class UserRegistrationView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             print("uid: ", uid)
 
-            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/teachers/activate/{
-                uid}/{token.key}"
+            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/teachers/activate/{uid}/{token.key}"
 
             mail_subject = "Activate your account!"
             mail_body = render_to_string('activation_email.html', {
