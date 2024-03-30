@@ -1,3 +1,4 @@
+import json
 from rest_framework.response import Response
 from django.shortcuts import redirect
 from rest_framework.views import APIView
@@ -6,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from django.contrib.auth import authenticate, login, logout
 from .models import Teacher
+from department.models import Department
 from django.contrib.auth.models import User
 from .serializers import TeacherSerializer, RegistrationSerializer, UserLoginSerializer, UserUpdateSerializer
 from rest_framework.authtoken.models import Token
@@ -42,7 +44,8 @@ class UserRegistrationView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             print("uid: ", uid)
 
-            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/teachers/activate/{uid}/{token.key}"
+            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/teachers/activate/{
+                uid}/{token.key}"
 
             mail_subject = "Activate your account!"
             mail_body = render_to_string('activation_email.html', {
@@ -80,7 +83,8 @@ class TeacherUpdateView(APIView):
         try:
             teacher = request.user.teacher
         except Teacher.DoesNotExist:
-            raise NotFound('You are not a teacher.')
+            raise Response({'message': 'You are not a teacher.'},
+                           status=status.HTTP_400_BAD_REQUEST)
 
         data = {
             'username': request.user.username,
@@ -90,7 +94,7 @@ class TeacherUpdateView(APIView):
             'profile_pic': teacher.profile_pic,
             'bio': teacher.bio,
             'designation': teacher.designation,
-            'department': teacher.department,
+            'department': teacher.department.name,
             'phone': teacher.phone
         }
 
@@ -99,12 +103,27 @@ class TeacherUpdateView(APIView):
         return Response(serializer.data, status=200)
 
     def put(self, request):
+        try:
+            teacher = request.user.teacher
+        except Teacher.DoesNotExist:
+            raise Response({'message': 'You are not a teacher.'},
+                           status=status.HTTP_400_BAD_REQUEST)
+
         serializer = self.serializer_class(
-            instance=request.user, data=request.data, partial=True)
+            instance=teacher, data=request.data, partial=True)
+
         if serializer.is_valid():
+            department_name = request.data.get('department')
+            if department_name:
+                try:
+                    department = Department.objects.get(name=department_name)
+                    serializer.validated_data['department'] = department
+                except Department.DoesNotExist:
+                    return Response({'message': 'Department not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
             serializer.save()
-            return Response(serializer.data, status=200)
-        return Response(serializer.errors, status=400)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLoginView(APIView):
@@ -136,6 +155,10 @@ class UserLoginView(APIView):
                 profile_pic_url = urljoin(base_url, str(
                     authenticated_user.teacher.profile_pic))
 
+                department = serialize(
+                    'json', [authenticated_user.teacher.department], fields=('name'))
+                data = json.loads(department)
+
                 custom_token_payload = {
                     'key': token.key,
                     'user_id': authenticated_user.id,
@@ -146,7 +169,7 @@ class UserLoginView(APIView):
                     'profile_pic': profile_pic_url,
                     'bio': authenticated_user.teacher.bio,
                     'designation': authenticated_user.teacher.designation,
-                    'department': authenticated_user.teacher.department,
+                    'department': data[0]["fields"]["name"],
                     'phone': authenticated_user.teacher.phone
                 }
 
