@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from department.models import Department
 
 # Create your models here.
 
@@ -10,7 +11,7 @@ class Teacher(models.Model):
         upload_to='teachers/images/', default='teachers/images/default.jpg', blank=True, null=True)
     bio = models.TextField()
     designation = models.CharField(max_length=100)
-    department = models.CharField(max_length=100, null=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True)
     phone = models.CharField(max_length=15)
 
     def __str__(self):

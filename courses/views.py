@@ -26,8 +26,13 @@ class CourseListView(ListAPIView):
     def get_queryset(self):
         queryset = Course.objects.all()
         department = self.request.query_params.get('department')
+        teacher = self.request.query_params.get('teacher')
+
         if department:
             queryset = queryset.filter(department=department)
+        if teacher:
+            queryset = queryset.filter(teacher__user__username=teacher)
+
         return queryset
 
 

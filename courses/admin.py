@@ -5,9 +5,9 @@ from .models import Course
 
 
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'teacher')
-    list_filter = ('teacher',)
-    search_fields = ('title', 'teacher__user__first_name',
+    list_display = ('id', 'title', 'department', 'teacher')
+    list_filter = ('teacher', 'department')
+    search_fields = ('title', 'department__slug', 'teacher__user__first_name',
                      'teacher__user__last_name')
 
 

@@ -4,6 +4,7 @@ from .models import Course
 
 class CourseSerializer(ModelSerializer):
     teacher = StringRelatedField()
+    department = StringRelatedField()
 
     class Meta:
         model = Course
