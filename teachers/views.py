@@ -72,7 +72,7 @@ class UserRegistrationView(APIView):
         return Response({'message': 'Invalid activation link!'}, status=400)
 
 
-class UserUpdateView(APIView):
+class TeacherUpdateView(APIView):
     serializer_class = UserUpdateSerializer
     permission_classes = [IsAuthenticated]
 
