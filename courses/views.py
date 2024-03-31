@@ -21,7 +21,7 @@ class CourseListView(ListAPIView):
     serializer_class = CourseSerializer
     pagination_class = CoursePagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'department',
+    search_fields = ['title', 'department__slug',
                      'teacher__user__first_name', 'teacher__user__last_name']
 
     def get_queryset(self):
