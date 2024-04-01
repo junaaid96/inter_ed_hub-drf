@@ -169,7 +169,8 @@ class UserLoginView(APIView):
                     'bio': authenticated_user.teacher.bio,
                     'designation': authenticated_user.teacher.designation,
                     'department': data[0]["fields"]["name"],
-                    'phone': authenticated_user.teacher.phone
+                    'phone': authenticated_user.teacher.phone,
+                    'user_type': authenticated_user.teacher.user_type
                 }
 
                 return Response({'message': 'User logged in successfully!', 'token': custom_token_payload}, status=status.HTTP_200_OK)
