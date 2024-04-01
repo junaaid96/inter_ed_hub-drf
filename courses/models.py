@@ -14,5 +14,8 @@ class Course(models.Model):
     image = models.ImageField(upload_to='courses/images/', blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ['title']
+
     def __str__(self):
         return f'{self.title} by {self.teacher}'

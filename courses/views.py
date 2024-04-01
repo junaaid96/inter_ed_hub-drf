@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import pagination, filters
+# from django.shortcuts import get_object_or_404
 
 
 class CoursePagination(pagination.PageNumberPagination):
@@ -26,11 +27,11 @@ class CourseListView(ListAPIView):
 
     def get_queryset(self):
         queryset = Course.objects.all()
-        department = self.request.query_params.get('department')
+        department_slug = self.request.query_params.get('department')
         teacher = self.request.query_params.get('teacher')
 
-        if department:
-            queryset = queryset.filter(department=department)
+        if department_slug:
+            queryset = queryset.filter(department__slug=department_slug)
         if teacher:
             queryset = queryset.filter(teacher__user__username=teacher)
 
