@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 
 
 class TeacherSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
     first_name = serializers.CharField(
         source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -14,7 +15,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = 'id', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'designation', 'department', 'phone'
+        fields = 'id', 'username', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'designation', 'department', 'phone'
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
