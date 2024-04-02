@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Teacher
+from department.models import Department
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
@@ -26,7 +27,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
     designation = serializers.CharField()
-    department = serializers.CharField()
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all()
+    )
     phone = serializers.CharField()
 
     class Meta:
