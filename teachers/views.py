@@ -152,7 +152,7 @@ class UserLoginView(APIView):
 
                 custom_token_payload = {
                     'key': token.key,
-                    'user_id': authenticated_user.id,
+                    'user_id': authenticated_user.teacher.id,
                     'username': authenticated_user.username,
                     'email': authenticated_user.email,
                     'first_name': authenticated_user.first_name,
