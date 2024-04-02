@@ -112,14 +112,6 @@ class TeacherUpdateView(APIView):
             instance=teacher, data=request.data, partial=True)
 
         if serializer.is_valid():
-            department_name = request.data.get('department')
-            if department_name:
-                try:
-                    department = Department.objects.get(name=department_name)
-                    serializer.validated_data['department'] = department
-                except Department.DoesNotExist:
-                    return Response({'message': 'Department not found.'}, status=status.HTTP_400_BAD_REQUEST)
-
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

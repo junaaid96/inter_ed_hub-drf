@@ -70,15 +70,6 @@ class CourseUpdateView(APIView):
         if request.user.teacher == course.teacher:
             serializer = CourseSerializer(course, data=request.data)
             if serializer.is_valid():
-                department_name = request.data.get('department')
-                if department_name:
-                    try:
-                        department = Department.objects.get(
-                            name=department_name)
-                        serializer.validated_data['department'] = department
-                    except Department.DoesNotExist:
-                        return Response({'message': 'Department not found.'}, status=status.HTTP_400_BAD_REQUEST)
-
                 serializer.save()
                 return Response(serializer.data)
             else:

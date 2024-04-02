@@ -90,6 +90,9 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+
     username = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -101,6 +104,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         queryset=Department.objects.all()
     )
     phone = serializers.CharField()
+
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email',
