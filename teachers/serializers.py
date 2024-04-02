@@ -90,13 +90,12 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(read_only=True)
-    email = serializers.EmailField(read_only=True)
+    username = serializers.CharField(
+        source='user.username')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    email = serializers.EmailField(source='user.email')
 
-    username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    email = serializers.EmailField()
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
     designation = serializers.CharField()
@@ -109,27 +108,25 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'first_name', 'last_name', 'email',
                   'profile_pic', 'bio', 'designation', 'department', 'phone')
-        extra_kwargs = {
-            'username': {'read_only': True},
-            'email': {'read_only': True}
-        }
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data.get(
-            'first_name', instance.first_name)
-        instance.last_name = validated_data.get(
-            'last_name', instance.last_name)
-        instance.save()
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            user = instance.user
+            user.username = user_data.get('username', user.username)
+            user.first_name = user_data.get('first_name', user.first_name)
+            user.last_name = user_data.get('last_name', user.last_name)
+            user.email = user_data.get('email', user.email)
+            user.save()
 
-        teacher = instance.teacher
-        teacher.profile_pic = validated_data.get(
-            'profile_pic', teacher.profile_pic)
-        teacher.bio = validated_data.get('bio', teacher.bio)
-        teacher.designation = validated_data.get(
-            'designation', teacher.designation)
-        teacher.department = validated_data.get(
-            'department', teacher.department)
-        teacher.phone = validated_data.get('phone', teacher.phone)
-        teacher.save()
+        instance.profile_pic = validated_data.get(
+            'profile_pic', instance.profile_pic)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.designation = validated_data.get(
+            'designation', instance.designation)
+        instance.department = validated_data.get(
+            'department', instance.department)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.save()
 
         return instance
