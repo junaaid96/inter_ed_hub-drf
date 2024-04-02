@@ -97,9 +97,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
     designation = serializers.CharField()
-    department = serializers.CharField()
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all()
+    )
     phone = serializers.CharField()
-
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email',
