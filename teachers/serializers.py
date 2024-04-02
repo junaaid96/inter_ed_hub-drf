@@ -15,7 +15,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = 'id', 'username', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'designation', 'department', 'phone'
+        fields = 'id', 'username', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'designation', 'department', 'phone', 'user_type'
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
