@@ -4,12 +4,10 @@ from django.shortcuts import redirect
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound
 from django.contrib.auth import authenticate, login, logout
 from .models import Teacher
-from department.models import Department
 from django.contrib.auth.models import User
-from .serializers import TeacherSerializer, RegistrationSerializer, UserLoginSerializer, UserUpdateSerializer
+from .serializers import TeacherSerializer, TeacherRegistrationSerializer, TeacherLoginSerializer, TeacherUpdateSerializer
 from rest_framework.authtoken.models import Token
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -30,8 +28,8 @@ class TeacherDetailView(RetrieveAPIView):
     serializer_class = TeacherSerializer
 
 
-class UserRegistrationView(APIView):
-    serializer_class = RegistrationSerializer
+class TeacherRegistrationView(APIView):
+    serializer_class = TeacherRegistrationSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -75,7 +73,7 @@ class UserRegistrationView(APIView):
 
 
 class TeacherUpdateView(APIView):
-    serializer_class = UserUpdateSerializer
+    serializer_class = TeacherUpdateSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -117,8 +115,8 @@ class TeacherUpdateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserLoginView(APIView):
-    serializer_class = UserLoginSerializer
+class TeacherLoginView(APIView):
+    serializer_class = TeacherLoginSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -172,7 +170,7 @@ class UserLoginView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserLogoutView(APIView):
+class TeacherLogoutView(APIView):
     def post(self, request):
         logout(request)
         return Response({'message': 'User logged out successfully!'}, status=200)

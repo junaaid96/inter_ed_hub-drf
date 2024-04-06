@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Teacher
+from .models import Student
 from department.models import Department
 from django.contrib.auth.models import User
 
 
-class TeacherSerializer(serializers.ModelSerializer):
+class StudentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     first_name = serializers.CharField(
         source='user.first_name', read_only=True)
@@ -13,20 +13,17 @@ class TeacherSerializer(serializers.ModelSerializer):
     department = serializers.StringRelatedField()
 
     class Meta:
-        model = Teacher
-        fields = 'id', 'username', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'designation', 'department', 'phone', 'user_type'
+        model = Student
+        fields = 'id', 'username', 'first_name', 'last_name', 'email', 'profile_pic', 'bio', 'department', 'phone', 'user_type'
 
 
-class TeacherRegistrationSerializer(serializers.ModelSerializer):
+class StudentRegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.EmailField()
-    # write_only = True means that the field will be used when creating an instance of the model, but it won't be included when serializing the model instance.
     confirm_password = serializers.CharField(write_only=True)
-
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
-    designation = serializers.CharField()
     department = serializers.PrimaryKeyRelatedField(
         queryset=Department.objects.all()
     )
@@ -35,7 +32,7 @@ class TeacherRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email', 'password',
-                  'confirm_password', 'profile_pic', 'bio', 'designation', 'department', 'phone')
+                  'confirm_password', 'profile_pic', 'bio', 'department', 'phone')
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -57,7 +54,6 @@ class TeacherRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         profile_pic = validated_data.pop('profile_pic', None)
         bio = validated_data.pop('bio')
-        designation = validated_data.pop('designation')
         department = validated_data.pop('department')
         phone = validated_data.pop('phone')
 
@@ -72,11 +68,10 @@ class TeacherRegistrationSerializer(serializers.ModelSerializer):
         user.is_active = False
         user.save()
 
-        teacher = Teacher.objects.create(
+        student = Student.objects.create(
             user=user,
             profile_pic=profile_pic,
             bio=bio,
-            designation=designation,
             department=department,
             phone=phone
         )
@@ -84,38 +79,36 @@ class TeacherRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-class TeacherLoginSerializer(serializers.Serializer):
+class StudentLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
 
     def validate(self, data):
         username = data.get('username')
 
-        if not Teacher.objects.filter(user__username=username).exists():
-            raise serializers.ValidationError('Teacher does not exist!')
-
+        if not Student.objects.filter(user__username=username).exists():
+            raise serializers.ValidationError('Student does not exist!')
+        
         return data
 
 
-class TeacherUpdateSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        source='user.username')
+class StudentUpdateSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     email = serializers.EmailField(source='user.email')
 
     profile_pic = serializers.ImageField(required=False)
     bio = serializers.CharField()
-    designation = serializers.CharField()
     department = serializers.PrimaryKeyRelatedField(
         queryset=Department.objects.all()
     )
     phone = serializers.CharField()
 
     class Meta:
-        model = User
+        model = Student
         fields = ('username', 'first_name', 'last_name', 'email',
-                  'profile_pic', 'bio', 'designation', 'department', 'phone')
+                  'profile_pic', 'bio', 'department', 'phone')
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', None)
@@ -127,11 +120,9 @@ class TeacherUpdateSerializer(serializers.ModelSerializer):
             user.email = user_data.get('email', user.email)
             user.save()
 
+        instance.bio = validated_data.get('bio', instance.bio)
         instance.profile_pic = validated_data.get(
             'profile_pic', instance.profile_pic)
-        instance.bio = validated_data.get('bio', instance.bio)
-        instance.designation = validated_data.get(
-            'designation', instance.designation)
         instance.department = validated_data.get(
             'department', instance.department)
         instance.phone = validated_data.get('phone', instance.phone)

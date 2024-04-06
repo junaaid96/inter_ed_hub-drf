@@ -2,13 +2,11 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from .models import Course
-from department.models import Department
 from .serializers import CourseSerializer, CourseCreateSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import pagination, filters
-# from django.shortcuts import get_object_or_404
 
 
 class CoursePagination(pagination.PageNumberPagination):
@@ -90,3 +88,24 @@ class CourseDeleteView(DestroyAPIView):
         else:
             raise PermissionDenied(
                 "You do not have permission to delete this course.")
+
+
+class CourseEnrollView(APIView):
+    queryset = Course.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        course = Course.objects.get(pk=pk)
+
+        if hasattr(request.user, 'student'):
+            student = request.user.student
+        else:
+            return Response({'message': 'You are not a student.'})
+        
+        if student not in course.enrolled_students.all():
+            course.enrolled_students.add(student)
+            course.total_enrollment += 1
+            course.save()
+            return Response({'message': 'You have successfully enrolled in this course.'})
+        else:
+            return Response({'message': 'You are already enrolled in this course.'})
