@@ -78,7 +78,7 @@ class CourseUpdateView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             raise PermissionDenied(
-                "You do not have permission to update this course.")
+                "You do not have permission to update this course.", status.HTTP_403_FORBIDDEN)
 
 
 class CourseDeleteView(DestroyAPIView):
@@ -104,12 +104,12 @@ class CourseEnrollView(APIView):
         if hasattr(request.user, 'student'):
             student = request.user.student
         else:
-            return Response({'message': 'You are not a student.'})
+            return Response({'message': 'You are not a student.'}, status=status.HTTP_403_FORBIDDEN)
 
         if student not in course.enrolled_students.all():
             course.enrolled_students.add(student)
             course.total_enrollment += 1
             course.save()
-            return Response({'message': 'You have successfully enrolled in this course.'})
+            return Response({'message': 'You have successfully enrolled in this course.'}, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'You are already enrolled in this course.'})
+            return Response({'message': 'You are already enrolled in this course.'}, status=status.HTTP_400_BAD_REQUEST)
