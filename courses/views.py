@@ -27,11 +27,15 @@ class CourseListView(ListAPIView):
         queryset = Course.objects.all()
         department_slug = self.request.query_params.get('department')
         teacher = self.request.query_params.get('teacher')
+        enrolled_student = self.request.query_params.get('enrolled_student')
 
         if department_slug:
             queryset = queryset.filter(department__slug=department_slug)
         if teacher:
             queryset = queryset.filter(teacher__user__username=teacher)
+        if enrolled_student:
+            queryset = queryset.filter(
+                enrolled_students__user__username=enrolled_student)
 
         return queryset
 
@@ -101,7 +105,7 @@ class CourseEnrollView(APIView):
             student = request.user.student
         else:
             return Response({'message': 'You are not a student.'})
-        
+
         if student not in course.enrolled_students.all():
             course.enrolled_students.add(student)
             course.total_enrollment += 1
