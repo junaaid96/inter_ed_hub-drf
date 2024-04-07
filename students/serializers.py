@@ -106,7 +106,7 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
     phone = serializers.CharField()
 
     class Meta:
-        model = Student
+        model = User
         fields = ('username', 'first_name', 'last_name', 'email',
                   'profile_pic', 'bio', 'department', 'phone')
 

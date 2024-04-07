@@ -42,7 +42,8 @@ class StudentRegistrationView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             print("uid: ", uid)
 
-            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/students/activate/{uid}/{token.key}"
+            confirmation_url = f"https://inter-ed-hub-drf.onrender.com/students/activate/{
+                uid}/{token.key}"
 
             mail_subject = "Activate your account!"
             mail_body = render_to_string('activation_email.html', {
@@ -106,7 +107,9 @@ class StudentUpdateView(APIView):
             raise Response({'message': 'You are not a student.'},
                            status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.serializer_class(data=request.data, partial=True)
+        serializer = self.serializer_class(
+            instance=student, data=request.data, partial=True)
+        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

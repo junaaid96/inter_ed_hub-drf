@@ -123,6 +123,7 @@ class TeacherLoginView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
             password = serializer.validated_data.get('password')
+            
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
