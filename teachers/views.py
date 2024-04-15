@@ -16,6 +16,8 @@ from django.core.mail import EmailMultiAlternatives
 from rest_framework import status
 from django.core.serializers import serialize
 from urllib.parse import urljoin
+from rest_framework.renderers import JSONRenderer
+from rest_framework.decorators import api_view
 
 
 class TeacherListView(ListAPIView):
@@ -30,6 +32,7 @@ class TeacherDetailView(RetrieveAPIView):
 
 class TeacherRegistrationView(APIView):
     serializer_class = TeacherRegistrationSerializer
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -58,6 +61,7 @@ class TeacherRegistrationView(APIView):
 
         return Response(serializer.errors, status=400)
 
+    @api_view(['GET'])
     def activate_account(request, uid64, token):
         try:
             uid = urlsafe_base64_decode(uid64).decode()
@@ -68,8 +72,8 @@ class TeacherRegistrationView(APIView):
         if user is not None and token == Token.objects.get(user=user).key:
             user.is_active = True
             user.save()
-            return redirect('teacher_login')
-        return Response({'message': 'Invalid activation link!'}, status=400)
+            return Response({'message': 'Account activated successfully!'}, status=200)
+        return Response({'message': 'Activation link is invalid!'}, status=400)
 
 
 class TeacherUpdateView(APIView):
@@ -123,7 +127,7 @@ class TeacherLoginView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
             password = serializer.validated_data.get('password')
-            
+
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
