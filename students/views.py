@@ -16,6 +16,9 @@ from django.core.mail import EmailMultiAlternatives
 from rest_framework import status
 from django.core.serializers import serialize
 from urllib.parse import urljoin
+from rest_framework.renderers import JSONRenderer
+from rest_framework.decorators import api_view
+from django.http import HttpResponse
 
 
 class StudentListView(ListAPIView):
@@ -30,6 +33,7 @@ class StudentDetailView(RetrieveAPIView):
 
 class StudentRegistrationView(APIView):
     serializer_class = StudentRegisterSerializer
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -58,6 +62,7 @@ class StudentRegistrationView(APIView):
 
         return Response(serializer.errors, status=400)
 
+    @api_view(['GET'])
     def activate_account(request, uid64, token):
         try:
             uid = urlsafe_base64_decode(uid64).decode()
@@ -68,7 +73,7 @@ class StudentRegistrationView(APIView):
         if user is not None and Token.objects.get(user=user).key == token:
             user.is_active = True
             user.save()
-            return redirect('student_login')
+            return HttpResponse('Account activated successfully! Please <a href="https://inter-ed-hub-nextjs.vercel.app/student/login">Login</a>', status=200)
         else:
             return Response({'message': 'Activation link is invalid!'}, status=400)
 
@@ -108,7 +113,7 @@ class StudentUpdateView(APIView):
 
         serializer = self.serializer_class(
             instance=student, data=request.data, partial=True)
-        
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

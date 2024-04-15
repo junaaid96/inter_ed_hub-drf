@@ -18,6 +18,7 @@ from django.core.serializers import serialize
 from urllib.parse import urljoin
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import api_view
+from django.http import HttpResponse
 
 
 class TeacherListView(ListAPIView):
@@ -72,7 +73,7 @@ class TeacherRegistrationView(APIView):
         if user is not None and token == Token.objects.get(user=user).key:
             user.is_active = True
             user.save()
-            return Response({'message': 'Account activated successfully!'}, status=200)
+            return HttpResponse('Account activated successfully! Please <a href="https://inter-ed-hub-nextjs.vercel.app/teacher/login">Login</a>', status=200)
         return Response({'message': 'Activation link is invalid!'}, status=400)
 
 
