@@ -1,3 +1,4 @@
-# inter_ed_hub-drf
-
-Live Link: https://inter-ed-hub-drf.onrender.com/
+- This is the Backend developed using Django Rest Framework.
+- Backend Live Link: https://inter-ed-hub-drf.onrender.com/
+- Frontend Git Repository: https://github.com/junaaid96/inter_ed_hub-nextjs
+- Frontend Live Link: https://inter-ed-hub-nextjs.vercel.app/
