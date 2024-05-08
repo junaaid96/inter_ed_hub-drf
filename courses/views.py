@@ -1,8 +1,8 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from .models import Course
-from .serializers import CourseSerializer, CourseCreateSerializer
+from .models import Course, CourseProgress
+from .serializers import CourseSerializer, CourseCreateSerializer, CourseProgressSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -55,6 +55,29 @@ class CourseCreateView(APIView):
             serializer.save(teacher=request.user.teacher)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CourseProgressView(APIView):
+    serializer_class = CourseProgressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        course = Course.objects.get(pk=pk)
+
+        if hasattr(request.user, 'student'):
+            student = request.user.student
+        else:
+            return Response({'message': 'You are not a student.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if student not in course.enrolled_students.all():
+            return Response({'message': 'You are not enrolled in this course.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if CourseProgress.objects.filter(course=course, student=student).exists():
+            return Response({'message': 'You have already started this course.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        progress = CourseProgress(course=course, student=student)
+        progress.save()
+        return Response({'message': 'You have successfully started this course.'}, status=status.HTTP_200_OK)
 
 
 class CourseUpdateView(APIView):

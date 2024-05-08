@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, StringRelatedField
-from .models import Course
+from .models import Course, CourseProgress
 
 
 class CourseSerializer(ModelSerializer):
@@ -17,3 +17,12 @@ class CourseCreateSerializer(ModelSerializer):
         model = Course
         fields = ['title', 'description', 'duration',
                   'credit', 'department', 'image']
+
+
+class CourseProgressSerializer(ModelSerializer):
+    # course = StringRelatedField()
+    # student = StringRelatedField()
+
+    class Meta:
+        model = CourseProgress
+        fields = '__all__'

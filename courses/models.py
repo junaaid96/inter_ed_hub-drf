@@ -23,3 +23,16 @@ class Course(models.Model):
 
     def __str__(self):
         return f'{self.title} by {self.teacher}'
+
+
+class CourseProgress(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    completed = models.BooleanField(default=False)
+    progress = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    class Meta:
+        unique_together = ['course', 'student']
+
+    def __str__(self):
+        return f'{self.student} - {self.course}'
