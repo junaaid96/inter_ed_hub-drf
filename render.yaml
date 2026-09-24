@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: inter-ed-hub-drf
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn inter_ed_hub.wsgi:application --workers 3 --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: FRONTEND_URL
+        value: https://inter-ed-hub-nextjs.vercel.app
+      - key: BACKEND_URL
+        value: https://inter-ed-hub-drf.onrender.com
+      # Set these from `neon env pull` / the Neon console (never commit them):
+      - key: DATABASE_URL
+        sync: false
+      - key: AWS_ENDPOINT_URL_S3
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: ap-southeast-1

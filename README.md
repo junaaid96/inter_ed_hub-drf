@@ -1,168 +1,114 @@
-# InterEdHub - Online Learning Platform API
+# InterEd Hub API
 
-This is the backend API for InterEdHub, an online learning platform developed using Django Rest Framework. The API provides endpoints for managing courses, students, teachers, and departments.
+Django REST Framework backend for **InterEd Hub**, an online course platform with
+video lessons. Data lives in **Neon Postgres**; videos, cover images and avatars
+live in **Neon Object Storage** (S3 compatible, private bucket).
 
-## Live Links
+- Frontend: https://github.com/junaaid96/inter_ed_hub-nextjs
+- Neon project: `billowing-mountain-53588698` (branch `production`)
 
-- Backend API: https://inter-ed-hub-drf.onrender.com/
-- Frontend Application: https://inter-ed-hub-nextjs.vercel.app/
-- Frontend Repository: https://github.com/junaaid96/inter_ed_hub-nextjs
+## What's inside
 
-## Tech Stack
+| Area | Highlights |
+| --- | --- |
+| Accounts | One auth flow for students and teachers, login by username **or** email, optional email confirmation, password change, throttled auth endpoints |
+| Catalog | Search, subject/level/length/rating filters, sort by popularity, rating or newest, all stats computed with correlated subqueries (no join blow-up) |
+| Courses | Sections → lessons (video or reading), free-preview lessons, outcomes/requirements, draft → publish (needs at least one lesson), drag-and-drop reorder API |
+| Video | Browser uploads **straight to Neon Object Storage** with presigned URLs; files over 64 MB use parallel **multipart** uploads (16 MB parts, up to 5 GB). Playback uses short-lived presigned GET URLs with HTTP range requests, so seeking is instant and bytes never pass through Django |
+| Learning | Resume position per lesson, watch-time heartbeats, auto-complete at 90%, course progress, private **timestamped notes**, per-lesson **discussion** with instructor badges, reviews and rating breakdown |
+| Motivation | Daily learning activity → **streaks** + 12-week heatmap, verifiable **certificates** with a public code |
+| Teachers | Studio endpoints, dashboard with learners, rating, watch minutes, 30-day enrollments and an unanswered-questions inbox |
 
-- Django 4.2.7
-- Django Rest Framework
-- SQLite3 Database
-- Django Cors Headers
-- Django Filter
+## How video upload and streaming work
 
-## Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
+```
+Browser ──POST /uploads/──────────────► Django: reserve key, presign PUT (or start multipart)
+Browser ──PUT bytes (parallel parts)──► Neon Object Storage (private bucket)
+Browser ──POST /uploads/<id>/complete/► Django: HEAD object, mark asset ready
+Player  ──GET /lessons/<id>/stream/───► Django: access check → presigned GET (4 h)
+<video> ──Range: bytes=…──────────────► Neon Object Storage (206 Partial Content)
 ```
 
-2. Create and activate virtual environment:
-```bash
-python -m venv env
-env\Scripts\activate
-```
+Without `AWS_*` variables the app falls back to a local-disk backend that
+imitates the same presigned-URL contract, so everything works offline.
 
-3. Install dependencies:
+## Setup
+
 ```bash
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-4. Create .env file in the root directory with following variables:
-```plaintext
-SECRET_KEY=your_secret_key
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-```
-
-5. Run migrations:
-```bash
+cp .env.example .env            # DEBUG=true is enough for local dev
 python manage.py migrate
-```
-
-6. Start development server:
-```bash
+python manage.py seed_demo --demo-users   # optional demo catalog + logins
 python manage.py runserver
 ```
 
-## API Endpoints
+Demo logins (only with `--demo-users`): `demo_student` / `demo_teacher`,
+password `learn-together-2026`.
 
-### Root
-- `GET /` - Welcome message
+### Connect to Neon
 
-### Authentication
-- `POST /students/register/` - Register new student
-- `POST /teachers/register/` - Register new teacher
-- `POST /students/login/` - Student login
-- `POST /teachers/login/` - Teacher login
-- `POST /students/logout/` - Student logout
-- `POST /teachers/logout/` - Teacher logout
+`neon.ts` declares the private `intered-hub-uploads` bucket. From this folder:
 
-### Departments
-- `GET /departments/` - List all departments
-- `GET /departments/<id>/` - Get department details
-- `POST /departments/` - Create new department (Admin only)
-- `PUT /departments/<id>/` - Update department (Admin only)
-- `DELETE /departments/<id>/` - Delete department (Admin only)
-
-### Courses
-- `GET /courses/` - List all courses
-- `GET /courses/<id>/` - Get course details
-- `POST /courses/` - Create new course (Teacher only)
-- `PUT /courses/<id>/` - Update course (Course teacher only)
-- `DELETE /courses/<id>/` - Delete course (Course teacher only)
-- `GET /courses/enrolled/` - Get enrolled courses (Student only)
-- `POST /courses/<id>/enroll/` - Enroll in a course (Student only)
-- `GET /courses/progress/` - Get course progress (Student only)
-
-### Teachers
-- `GET /teachers/` - List all teachers
-- `GET /teachers/<id>/` - Get teacher details
-- `GET /teachers/profile/` - Get own profile (Teacher only)
-- `PUT /teachers/profile/` - Update own profile (Teacher only)
-- `GET /teachers/courses/` - Get teacher's courses (Teacher only)
-
-### Students
-- `GET /students/` - List all students (Admin only)
-- `GET /students/<id>/` - Get student details (Admin only)
-- `GET /students/profile/` - Get own profile (Student only)
-- `PUT /students/profile/` - Update own profile (Student only)
-
-## Models
-
-### Department
-- name
-- slug
-- description
-- created_at
-- updated_at
-
-### Course
-- title
-- description
-- department (ForeignKey)
-- teacher (ForeignKey)
-- credit
-- duration
-- total_enrollment
-- enrolled_students (ManyToManyField)
-- created_at
-- updated_at
-
-### CourseProgress
-- course (ForeignKey)
-- student (ForeignKey)
-- completed (Boolean)
-- progress (Decimal)
-
-### Teacher
-- user (OneToOneField)
-- department (ForeignKey)
-- profile_picture
-- bio
-- user_type
-- created_at
-- updated_at
-
-### Student
-- user (OneToOneField)
-- department (ForeignKey)
-- profile_picture
-- bio
-- user_type
-- created_at
-- updated_at
-
-## Authentication
-
-The API uses Token Authentication. Include the token in the Authorization header:
-```
-Authorization: Token <your_token>
+```bash
+npm i -g neon@latest && neon login
+neon link --project-id billowing-mountain-53588698 --branch production -y
+npm install                      # installs @neon/config for neon.ts
+neon deploy                      # applies neon.ts and writes DATABASE_URL + AWS_* to .env
+python manage.py migrate
+python manage.py configure_bucket_cors   # lets the frontend PUT/GET the bucket
 ```
 
-## Error Handling
+The `production` branch already has the schema and the six subjects applied.
 
-The API returns standard HTTP status codes:
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Internal Server Error
+### Deploy (Render)
 
-## Contributing
+`render.yaml` + `build.sh` install dependencies, collect static files, migrate
+and sync the bucket CORS rules. Set `DATABASE_URL`, `AWS_ENDPOINT_URL_S3`,
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` from `neon env pull` (or a Neon
+Console credential with `storage:read` + `storage:write`), plus `FRONTEND_URL`
+and `BACKEND_URL`.
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+## Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `SECRET_KEY`, `DEBUG` | Django basics (`SECRET_KEY` required when `DEBUG` is off) |
+| `DATABASE_URL` | Neon Postgres connection string (SQLite fallback) |
+| `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` | Neon Object Storage credentials |
+| `STORAGE_BUCKET` | Bucket name, default `intered-hub-uploads` |
+| `FRONTEND_URL`, `BACKEND_URL` | Used for CORS, activation links and media URLs |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Optional SMTP. When set, new accounts must confirm their email |
+| `VIDEO_URL_TTL`, `MAX_VIDEO_BYTES`, `MULTIPART_THRESHOLD`, `MULTIPART_PART_SIZE` | Upload/streaming tuning |
+
+## API overview
+
+| Method & path | Description |
+| --- | --- |
+| `POST /auth/register/` · `POST /auth/login/` · `POST /auth/logout/` | Token auth (`Authorization: Token <key>`) |
+| `GET/PATCH /auth/me/` · `POST /auth/password/` · `POST /auth/activate/` | Profile and account |
+| `GET /departments/` · `GET /teachers/` · `GET /teachers/<id>/` | Public directory |
+| `GET /courses/?search=&department=&level=&duration=&min_rating=&ordering=` | Catalog |
+| `POST /courses/` · `GET/PATCH/DELETE /courses/<slug>/` | Course CRUD (teachers own theirs) |
+| `POST /courses/<slug>/enroll/` · `GET/POST /courses/<slug>/reviews/` | Enrollment and reviews |
+| `POST /courses/<slug>/sections/` · `PATCH/DELETE /sections/<id>/` · `POST /sections/<id>/lessons/` | Curriculum builder |
+| `POST /courses/<slug>/reorder/` | Persist drag-and-drop order |
+| `GET/PATCH/DELETE /lessons/<id>/` · `GET /lessons/<id>/stream/` | Player data and video URL |
+| `POST /lessons/<id>/progress/` | Heartbeat: position, watch time, completion |
+| `GET/POST /lessons/<id>/notes/` · `PATCH/DELETE /notes/<id>/` · `GET /courses/<slug>/notes/` | Timestamped notes |
+| `GET/POST /lessons/<id>/comments/` · `DELETE /comments/<id>/` | Discussion |
+| `POST /uploads/` · `POST /uploads/<id>/parts/` · `POST /uploads/<id>/complete/` · `POST /uploads/<id>/abort/` | Direct-to-storage uploads |
+| `GET /media/<asset>/` | Public redirect for images (covers, avatars) |
+| `GET /me/learning/` · `GET /me/teaching/` | Student and teacher dashboards |
+| `GET /certificates/<code>/` | Public certificate verification |
+
+## Tests
+
+```bash
+DEBUG=1 python manage.py test
+```
+
+Covers the full journey (register → build course → upload → publish → enroll →
+stream with range requests → progress → notes → discussion → certificate),
+ownership rules, reordering, multipart uploads and streak maths. Runs on SQLite
+or Postgres (`DATABASE_URL=...`).
