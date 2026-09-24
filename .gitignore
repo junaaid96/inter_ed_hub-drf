@@ -1,7 +1,14 @@
 *.pyc
-__pycache__
-/__pycache__
-/__pycache__/
+__pycache__/
 /env
+/venv
+.venv
 *.env
+.env
+.env.local
 .vscode
+local.sqlite3
+local_storage/
+staticfiles/
+node_modules/
+.neon

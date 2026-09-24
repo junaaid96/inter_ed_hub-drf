@@ -1,0 +1,8 @@
+{
+  "name": "inter-ed-hub-drf",
+  "private": true,
+  "description": "Holds the Neon config tooling for neon.ts; the app itself is Django.",
+  "devDependencies": {
+    "@neon/config": "^1.6.0"
+  }
+}

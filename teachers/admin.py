@@ -1,17 +1,10 @@
 from django.contrib import admin
+
 from .models import Teacher
 
-# Register your models here.
 
-
+@admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ('id', 'full_name', 'designation', 'department', 'phone')
-    list_filter = ('designation', 'department')
-    search_fields = ('user__first_name', 'user__last_name',
-                     'designation', 'department__slug', 'phone')
-
-    def full_name(self, obj):
-        return f'{obj.user.first_name} {obj.user.last_name}'
-
-
-admin.site.register(Teacher, TeacherAdmin)
+    list_display = ('__str__', 'designation', 'department', 'created_at')
+    list_filter = ('department',)
+    search_fields = ('user__first_name', 'user__last_name', 'user__username', 'designation')
