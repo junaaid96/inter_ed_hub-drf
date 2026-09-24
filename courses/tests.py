@@ -226,3 +226,49 @@ class StreakTests(APITestCase):
         days = [today - timedelta(days=n) for n in (0, 1, 2, 5, 6, 7, 8)]
         self.assertEqual(streaks(days), (3, 4))
         self.assertEqual(streaks([today - timedelta(days=3)]), (0, 1))
+
+
+@override_settings(REQUIRE_EMAIL_ACTIVATION=True)
+class ActivationEmailTests(APITestCase):
+    def test_failed_email_does_not_leave_dangling_account(self):
+        from django.contrib.auth.models import User
+        payload = {'role': 'student', 'username': 'mailfail', 'email': 'mf@example.com',
+                   'first_name': 'Mail', 'password': 'correct-horse-battery'}
+        with mock.patch('accounts.views.send_mail', side_effect=OSError('smtp down')):
+            res = self.client.post('/auth/register/', payload, format='json')
+        self.assertEqual(res.status_code, 503)
+        self.assertFalse(User.objects.filter(username='mailfail').exists())
+
+    def test_activation_flow(self):
+        from django.core import mail
+        payload = {'role': 'student', 'username': 'act', 'email': 'act@example.com',
+                   'first_name': 'Act', 'password': 'correct-horse-battery'}
+        res = self.client.post('/auth/register/', payload, format='json')
+        self.assertTrue(res.data['activation_required'])
+        link = mail.outbox[0].body.split('activate?')[1].split()[0]
+        params = dict(p.split('=') for p in link.split('&'))
+        res = self.client.post('/auth/activate/', params, format='json')
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertIn('token', res.data)
+
+
+class AutoCorsTests(APITestCase):
+    @override_settings(STORAGE_AUTO_CORS=True, CORS_ALLOWED_ORIGINS=['https://app.example'],
+                       CORS_ALLOWED_ORIGIN_REGEXES=[])
+    def test_first_upload_applies_bucket_cors_once(self):
+        import uploads.storage as storage_module
+        storage_module._cors_applied = False
+        fake = mock.Mock(name='s3', supports_multipart=False)
+        fake.name = 's3'
+        fake.presign_put.return_value = 'https://s3/put'
+        res = self.client.post('/auth/register/', {
+            'role': 'teacher', 'username': 'corsy', 'email': 'c@example.com',
+            'first_name': 'C', 'password': 'correct-horse-battery'}, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {res.data['token']}")
+        body = {'kind': 'image', 'filename': 'a.png', 'content_type': 'image/png', 'size': 10}
+        with mock.patch('uploads.storage.get_storage', return_value=fake), \
+                mock.patch('uploads.views.get_storage', return_value=fake):
+            self.client.post('/uploads/', body, format='json')
+            self.client.post('/uploads/', body, format='json')
+        fake.configure_cors.assert_called_once_with(['https://app.example'])
+        storage_module._cors_applied = False

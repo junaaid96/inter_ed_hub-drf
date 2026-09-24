@@ -51,7 +51,14 @@ class RegisterView(AuthThrottleMixin, APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         if needs_activation:
-            send_activation_email(user)
+            try:
+                send_activation_email(user)
+            except Exception:
+                # Don't leave an account nobody can activate.
+                user.delete()
+                return Response({'detail': "We couldn't send the confirmation email. "
+                                           'Please try again in a few minutes.'},
+                                status=status.HTTP_503_SERVICE_UNAVAILABLE)
             return Response({'activation_required': True,
                              'detail': 'Check your inbox to confirm your email.'},
                             status=status.HTTP_201_CREATED)
