@@ -139,6 +139,25 @@ class LocalStorage:
         return None
 
 
+_cors_applied = False
+
+
+def ensure_bucket_cors():
+    """Idempotently allow the frontend origins to upload to the bucket."""
+    global _cors_applied
+    if _cors_applied or not settings.STORAGE_AUTO_CORS:
+        return
+    storage = get_storage()
+    if storage.name == 's3':
+        origins = list(settings.CORS_ALLOWED_ORIGINS)
+        if settings.CORS_ALLOWED_ORIGIN_REGEXES:
+            # S3 CORS has no regex support; allow any origin for PUT/GET when
+            # preview deployments are enabled. URLs are presigned regardless.
+            origins = ['*']
+        storage.configure_cors(origins)
+    _cors_applied = True
+
+
 @lru_cache(maxsize=1)
 def get_storage():
     if settings.STORAGE_BACKEND == 's3':

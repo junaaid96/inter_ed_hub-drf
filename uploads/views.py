@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import MediaAsset
-from .storage import get_storage
+from .storage import ensure_bucket_cors, get_storage
 
 ALLOWED_TYPES = {
     MediaAsset.Kind.VIDEO: {'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'},
@@ -80,6 +80,7 @@ class UploadInitView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         storage = get_storage()
+        ensure_bucket_cors()
 
         asset = MediaAsset(
             owner=request.user,

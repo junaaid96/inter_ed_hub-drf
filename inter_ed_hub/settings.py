@@ -113,6 +113,9 @@ MAX_VIDEO_BYTES = env.int('MAX_VIDEO_BYTES', default=5 * 1024 ** 3)
 MAX_IMAGE_BYTES = env.int('MAX_IMAGE_BYTES', default=10 * 1024 ** 2)
 MULTIPART_THRESHOLD = env.int('MULTIPART_THRESHOLD', default=64 * 1024 ** 2)
 MULTIPART_PART_SIZE = env.int('MULTIPART_PART_SIZE', default=16 * 1024 ** 2)
+# Apply the bucket CORS rules on the first upload of each process, so browser
+# uploads work even if `configure_bucket_cors` was never run during deploys.
+STORAGE_AUTO_CORS = env.bool('STORAGE_AUTO_CORS', default=True)
 
 
 REST_FRAMEWORK = {
@@ -167,8 +170,11 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
+# Serve app static files (Django admin, DRF) straight from the installed apps,
+# so the API works even when the host never runs collectstatic.
+WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
