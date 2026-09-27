@@ -5,6 +5,7 @@ video lessons. Data lives in **Neon Postgres**; videos, cover images and avatars
 live in **Neon Object Storage** (S3 compatible, private bucket).
 
 - Frontend: https://github.com/junaaid96/inter_ed_hub-nextjs
+- Live API: https://inter-ed-hub-drf.vercel.app
 - Neon project: `billowing-mountain-53588698` (branch `production`)
 
 ## What's inside
@@ -61,13 +62,43 @@ python manage.py configure_bucket_cors   # lets the frontend PUT/GET the bucket
 
 The `production` branch already has the schema and the six subjects applied.
 
-### Deploy (Render)
+### Deploy (Vercel)
 
-`render.yaml` + `build.sh` install dependencies, collect static files, migrate
-and sync the bucket CORS rules. Set `DATABASE_URL`, `AWS_ENDPOINT_URL_S3`,
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` from `neon env pull` (or a Neon
-Console credential with `storage:read` + `storage:write`), plus `FRONTEND_URL`
-and `BACKEND_URL`.
+The API runs on Vercel as project `inter-ed-hub-drf`, linked to this repo, so
+every push to `main` deploys to https://inter-ed-hub-drf.vercel.app. Vercel's
+Django preset installs `requirements.txt`, runs `collectstatic` and serves
+`inter_ed_hub.wsgi` as a function; no `vercel.json` is needed.
+
+- **Framework preset:** Django. **Function region:** `sin1` (Singapore, next to
+  the Neon branch in `ap-southeast-1`).
+- **Environment variables** (Production + Preview): `SECRET_KEY`, `DEBUG=false`,
+  `DATABASE_URL`, `STORAGE_BUCKET`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`,
+  `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `FRONTEND_URL`
+  (`https://inter-ed-hub-nextjs.vercel.app`) and `BACKEND_URL`
+  (`https://inter-ed-hub-drf.vercel.app`). Take the Neon values from
+  `neon env pull` or a Neon Console credential with `storage:read` +
+  `storage:write`.
+- **Deployment protection:** Vercel Authentication covers previews and
+  per-deployment URLs; the production domain stays public so the frontend can
+  call it.
+- **Migrations don't run on deploy.** After changing models, run them against
+  Neon yourself:
+
+  ```bash
+  DATABASE_URL=postgresql://... python manage.py migrate
+  ```
+
+- **Bucket CORS** is applied on the first upload of each process
+  (`STORAGE_AUTO_CORS`), or run `python manage.py configure_bucket_cors` once.
+
+The frontend reads the API address from `NEXT_PUBLIC_API_URL` in its own Vercel
+project; it is baked in at build time, so redeploy the frontend after changing it.
+
+### Deploy (Render, alternative)
+
+`render.yaml` + `build.sh` still work: they install dependencies, collect static
+files, migrate and sync the bucket CORS rules. Set the same variables as above,
+with `BACKEND_URL` pointing at the Render URL.
 
 ## Environment variables
 
