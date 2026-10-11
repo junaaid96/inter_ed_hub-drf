@@ -119,6 +119,10 @@ class MeView(APIView):
         return Response(MeSerializer(request.user).data)
 
     def patch(self, request):
+        from .demo import is_demo
+        if is_demo(request.user) and any(k in request.data for k in ('username', 'email')):
+            return Response({'detail': "Demo accounts can't change their username or email."},
+                            status=status.HTTP_403_FORBIDDEN)
         serializer = MeSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -132,7 +136,11 @@ class ChangePasswordView(APIView):
         from django.contrib.auth.password_validation import validate_password
         from django.core.exceptions import ValidationError
 
+        from .demo import is_demo
         user = request.user
+        if is_demo(user):
+            return Response({'detail': "Demo accounts can't change their password."},
+                            status=status.HTTP_403_FORBIDDEN)
         if not user.check_password(request.data.get('current_password', '')):
             return Response({'current_password': ['Current password is incorrect.']}, status=400)
         new = request.data.get('new_password', '')
