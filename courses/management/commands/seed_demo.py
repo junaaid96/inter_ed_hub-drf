@@ -9,6 +9,8 @@ Demo lessons stream public sample videos; real courses use uploaded videos.
 import random
 
 from django.contrib.auth.models import User
+
+from accounts.demo import DEMO_PASSWORD
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -90,7 +92,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--demo-users', action='store_true',
                             help='Create demo_teacher and demo_student logins.')
-        parser.add_argument('--password', default='learn-together-2026',
+        parser.add_argument('--password', default=DEMO_PASSWORD,
                             help='Password for demo logins.')
 
     @transaction.atomic
@@ -162,6 +164,9 @@ class Command(BaseCommand):
         t_user, _ = User.objects.get_or_create(
             username='demo_teacher', defaults={'first_name': 'Dana', 'last_name': 'Teacher',
                                                'email': 'demo_teacher@example.com'})
+        t_user.email = 'demo_teacher@example.com'
+        t_user.is_active = True
+        t_user.is_staff = t_user.is_superuser = False
         t_user.set_password(password)
         t_user.save()
         Teacher.objects.get_or_create(user=t_user, defaults={
@@ -170,6 +175,9 @@ class Command(BaseCommand):
         s_user, _ = User.objects.get_or_create(
             username='demo_student', defaults={'first_name': 'Sam', 'last_name': 'Student',
                                                'email': 'demo_student@example.com'})
+        s_user.email = 'demo_student@example.com'
+        s_user.is_active = True
+        s_user.is_staff = s_user.is_superuser = False
         s_user.set_password(password)
         s_user.save()
         student, _ = Student.objects.get_or_create(
